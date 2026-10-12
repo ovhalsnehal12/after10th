@@ -1,4 +1,4 @@
-
+import xml.etree.ElementTree as ET
 from flask import Flask, render_template, send_from_directory, Response
 from datetime import date
 
@@ -45,28 +45,43 @@ def google_verification():
 
 
 # XML Sitemap for Google
+
 @app.route("/sitemap.xml")
 def sitemap():
+    namespace = "http://www.sitemaps.org/schemas/sitemap/0.9"
+    ET.register_namespace("", namespace)
+
+    urlset = ET.Element(f"{{{namespace}}}urlset")
+
     pages = [
         "https://after10th.onrender.com/",
         "https://after10th.onrender.com/explore",
         "https://after10th.onrender.com/paths",
         "https://after10th.onrender.com/careers",
-        "https://after10th.onrender.com/questions"
+        "https://after10th.onrender.com/questions",
     ]
 
-    xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
-    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-
     for page in pages:
-        xml += "  <url>\n"
-        xml += f"    <loc>{page}</loc>\n"
-        xml += f"    <lastmod>{date.today().isoformat()}</lastmod>\n"
-        xml += "  </url>\n"
+        url_element = ET.SubElement(
+            urlset, f"{{{namespace}}}url"
+        )
+        loc = ET.SubElement(
+            url_element, f"{{{namespace}}}loc"
+        )
+        loc.text = page
 
-    xml += "</urlset>"
+    xml_content = ET.tostring(
+        urlset,
+        encoding="utf-8",
+        xml_declaration=True
+    )
 
-    return Response(xml, mimetype="application/xml")
+    return Response(
+        xml_content,
+        status=200,
+        content_type="application/xml; charset=utf-8"
+    )
+
 
 
 if __name__ == "__main__":
